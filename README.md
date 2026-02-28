@@ -14,6 +14,7 @@ To take off, throttle up, then climb.
 ↓ / S descend
 → / D throttle up
 ← / A throttle down
+
 Psst! Try in-flight combos to discover tricks...
 
 *GAMEPLAY*
@@ -29,7 +30,6 @@ One drains every 30 seconds.
 When you get down to 1, a warning flashes. Look for runway!
 Land before it hits zero.
 Recharge costs 6 points, taken from your game points.
-
-Have fun!
 No recharge = no next mission.
 
+_Have fun!_
