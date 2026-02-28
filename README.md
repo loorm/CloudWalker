@@ -6,24 +6,26 @@ Me and my son love building real-life RC models - airplanes, quadcopters, boats,
 ---------------------------------------------------
 ///////////////// INSTRUCTIONS ////////////////////
 ---------------------------------------------------
-*CONTROLS*
+**CONTROLS**
 
 To take off, throttle up, then climb.
 
-↑ / W climb
-↓ / S descend
-→ / D throttle up
-← / A throttle down
+↑ / W climb  
+↓ / S descend  
+→ / D throttle up  
+← / A throttle down  
 
 Psst! Try in-flight combos to discover tricks...
 
-*GAMEPLAY*
+**GAMEPLAY**
+
 Avoid everything.
 Avoiding obstacles gives game points.
 There are no damage points with RC aircraft. One hit = crash.
 At the end of the level, throttle down and land gently on the runway.
 
-*BATTERY (LiPo)*
+**BATTERY (LiPo)**
+
 With RC aircraft, you always watch your LiPo levels.
 You start with 6 cells.
 One drains every 30 seconds.
