@@ -1,0 +1,37 @@
+# ── Unused sprite packs ───────────────────────────────────────────────────────
+# WW2 top-down planes (not used in the game)
+Assets/Planes_Obstacles/Ülalt vaates/
+
+# Placeholder platformer obstacle sprites (obstacles are drawn procedurally)
+Assets/Planes_Obstacles/Puhtalt opstikaalid/
+
+# GUI pack, collectables (not referenced in code)
+Assets/Planes_Obstacles/GUI/
+Assets/Planes_Obstacles/Collectables/
+
+# Environment tiles / clouds (loaded by assets.js but never rendered)
+Assets/Planes_Obstacles/Enviornment/
+
+# Unused plane variants
+Assets/Planes_Obstacles/Planes/BulletUpdated.png
+Assets/Planes_Obstacles/Planes/GreyPlane.png
+Assets/Planes_Obstacles/Planes/Highlight.png
+Assets/Planes_Obstacles/Planes/PinkPlane.png
+Assets/Planes_Obstacles/Planes/RedPlane.png
+Assets/Planes_Obstacles/Planes/Shadow.png
+Assets/Planes_Obstacles/Planes/SmokeFX.png
+Assets/Planes_Obstacles/Planes/WhitePlane.png
+Assets/Planes_Obstacles/Planes/YellowPlane.png
+
+# Unused bird assets
+Assets/Birds/Textuur/BirdSpriteBig.png
+Assets/Birds/Helid/mixkit-bird-movement-while-flying-2703.wav
+
+# Background source art (only .png versions are used in game)
+Assets/Environments/*.ai
+Assets/Environments/*.eps
+Assets/Environments/*.jpg
+Assets/Environments/*.psd
+
+# Internal planning documents
+milestone1_plan.md

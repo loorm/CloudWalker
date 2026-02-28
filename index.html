@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LARC CloudWalker</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0a12;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: monospace;
+      color: #aaa;
+      user-select: none;
+    }
+
+    canvas {
+      display: block;
+      /* Fill window while preserving 16:9 aspect ratio — no JS needed */
+      width: min(100vw, calc(100vh * 16 / 9));
+      height: auto;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      border: 2px solid #222;
+    }
+
+    #hint {
+      margin-top: 10px;
+      font-size: 11px;
+      color: #444;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>
+  <div id="hint">
+    Run with: <code>npx serve .</code> &nbsp;|&nbsp;
+    Or Chrome: <code>--allow-file-access-from-files</code>
+  </div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
