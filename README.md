@@ -7,11 +7,17 @@ Me and my son love building real-life RC models - airplanes, quadcopters, boats,
 ///////////////// INSTRUCTIONS ////////////////////
 ---------------------------------------------------
 *CONTROLS*
+
 To take off, throttle up, then climb.
+
 ↑ / W climb
+
 ↓ / S descend
+
 → / D throttle up
+
 ← / A throttle down
+
 Psst! Try in-flight combos to discover tricks...
 
 *GAMEPLAY*
