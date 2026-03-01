@@ -45,7 +45,7 @@ export const LEVEL_DATA = [
         obsGapFactor:    0.82,
         trafficCount:    3,
         trafficSpeed:    245,
-        birdCount:       3,
+        birdCount:       2,
         birdSpeed:       62,
         turbulence:      0,
         pointMultiplier: 1,

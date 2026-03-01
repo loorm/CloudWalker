@@ -71,5 +71,5 @@ export const BIRD_H          = 24;   // display height
 export const BIRD_FRAME_SIZE = 16;   // source frame size in BirdSprite.png
 export const BIRD_FRAMES     = 8;    // frames per row
 export const BIRD_FPS        = 10;   // animation frames per second
-export const BIRD_SPAWN_INTERVAL = 3.0;   // reduced to keep birds consistently on screen
-export const BIRD_SPAWN_JITTER   = 2.0;
+export const BIRD_SPAWN_INTERVAL = 2.0;
+export const BIRD_SPAWN_JITTER   = 0.5;

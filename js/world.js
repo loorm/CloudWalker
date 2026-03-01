@@ -28,20 +28,54 @@ function makeNpc(worldX, y, speed) {
     };
 }
 
-function makeBird(worldX, y, speed) {
+function makeBird(worldX, y, speed, phase) {
+    // phase in [0,1): fraction of one animation cycle — distribute evenly within flock
+    // so birds are never in the same frame at the same time.
+    const cycleLen = BIRD_FRAMES / BIRD_FPS; // seconds per full cycle
     return {
         worldX,
         y,
         speed,
         vy:        (Math.random() - 0.5) * 80,
-        flapTimer: Math.random() * 0.8, // stagger animation phase per bird
+        flapTimer: phase * cycleLen,
     };
+}
+
+// ── Bird sprite scanner ───────────────────────────────────────────────────────
+// Reads pixel data once to find which frames actually contain visible pixels.
+// Skips blank/transparent frames that cause the bird to "disappear" mid-animation.
+function _scanBirdFrames(birdImg) {
+    try {
+        const size  = BIRD_FRAME_SIZE;
+        const total = Math.max(1, Math.floor(birdImg.width / size));
+        const c     = document.createElement('canvas');
+        c.width     = birdImg.width;
+        c.height    = size;
+        const cx    = c.getContext('2d');
+        cx.drawImage(birdImg, 0, 0);
+        const valid = [];
+        for (let f = 0; f < total; f++) {
+            const data = cx.getImageData(f * size, 0, size, size).data;
+            // Frame counts as valid if any pixel has alpha > 32
+            for (let i = 3; i < data.length; i += 4) {
+                if (data[i] > 32) { valid.push(f); break; }
+            }
+        }
+        console.log(`[birds] sprite ${birdImg.width}×${birdImg.height}px · ${total} frames · valid:`, valid);
+        return valid.length > 0 ? valid : Array.from({ length: total }, (_, i) => i);
+    } catch {
+        // Tainted canvas (CORS) — fall back to all frames
+        const total = Math.max(1, Math.floor(birdImg.width / BIRD_FRAME_SIZE));
+        console.warn('[birds] cannot scan frames, using all', total);
+        return Array.from({ length: total }, (_, i) => i);
+    }
 }
 
 // ── World class ───────────────────────────────────────────────────────────────
 
 export class World {
     constructor() {
+        this._validBirdFrames = null; // populated on first draw by _scanBirdFrames
         this.levelCfg = null;
         this.reset({ num: 1, bgKey: 'bg_1', obsGapFactor: 1, trafficCount: 0,
                      trafficSpeed: 0, birdCount: 0, birdSpeed: 0, turbulence: 0 }, 0);
@@ -152,16 +186,19 @@ export class World {
     }
 
     _updateBirds(cameraX, cfg) {
-        this.birds = this.birds.filter(b => b.worldX > cameraX - 200);
+        // Remove birds that are past the draw cutoff so the spawn check triggers
+        // the instant the last bird leaves the screen (not 158 px later).
+        this.birds = this.birds.filter(b => b.worldX > cameraX - BIRD_W - 10);
 
         if (this.birds.length < cfg.birdCount && this.birdTimer <= 0) {
-            const flockSize = 2 + Math.floor(Math.random() * 3); // 2-4 birds
+            const flockSize = Math.min(2 + Math.floor(Math.random() * 3), cfg.birdCount); // 2-4 but never over cap
             const baseY = HUD_H + 60 + Math.random() * (PLAY_H - 120);
             for (let i = 0; i < flockSize; i++) {
                 this.birds.push(makeBird(
                     cameraX + CANVAS_W + 80 + i * 35,
                     baseY + (Math.random() - 0.5) * 60,
                     cfg.birdSpeed,
+                    i / flockSize, // evenly spaced phases: 0 and 0.5 for 2 birds, etc.
                 ));
             }
             this.birdTimer = BIRD_SPAWN_INTERVAL + (Math.random() - 0.5) * BIRD_SPAWN_JITTER;
@@ -382,18 +419,19 @@ export class World {
     _drawBirds(ctx, cameraX) {
         ctx.imageSmoothingEnabled = false;
         const birdImg = img('bird');
+
+        // Scan sprite once to build list of non-transparent frames
+        if (!this._validBirdFrames && birdImg) {
+            this._validBirdFrames = _scanBirdFrames(birdImg);
+        }
+        const validFrames = this._validBirdFrames ?? [0];
+
         for (const bird of this.birds) {
             const sx = Math.round(bird.worldX - cameraX);
             if (sx < -BIRD_W - 10 || sx > CANVAS_W + BIRD_W) continue;
 
-            // Each frame is BIRD_FRAME_SIZE × BIRD_FRAME_SIZE (16×16).
-            // Compute frame count from image width so we never sample out-of-bounds
-            // or blank frames, regardless of how many columns the sheet has.
-            // Always read from row 0 (y=0) so multi-row sheets only use the first row.
-            const numFrames = birdImg
-                ? Math.max(1, Math.floor(birdImg.width / BIRD_FRAME_SIZE))
-                : BIRD_FRAMES;
-            const frame = Math.floor(bird.flapTimer * BIRD_FPS) % numFrames;
+            // Only cycle through frames that have actual pixels
+            const frame = validFrames[Math.floor(bird.flapTimer * BIRD_FPS) % validFrames.length];
             ctx.save();
             ctx.translate(sx, bird.y);
             if (birdImg) {

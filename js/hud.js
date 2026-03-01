@@ -207,9 +207,39 @@ export class HUD {
         ctx.font = '13px monospace';
         ctx.fillText('← slow · → fast · ↑ climb · ↓ descend · tricks: double-tap / combos', CANVAS_W / 2, CANVAS_H / 2 + 100);
 
-        ctx.fillStyle = '#666677';
-        ctx.font = '13px monospace';
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        ctx.font = '14px monospace';
+        ctx.fillText('Press  I  for instructions', CANVAS_W / 2 + 1, CANVAS_H / 2 + 127);
+        ctx.fillStyle = '#aaccee';
         ctx.fillText('Press  I  for instructions', CANVAS_W / 2, CANVAS_H / 2 + 126);
+
+        ctx.textAlign = 'left';
+    }
+
+    drawDevSelect(ctx) {
+        const W = 400, H = 120;
+        const bx = (CANVAS_W - W) / 2, by = (CANVAS_H - H) / 2;
+
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.82)';
+        ctx.fillRect(bx, by, W, H);
+        ctx.strokeStyle = '#f0c030';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(bx + 1, by + 1, W - 2, H - 2);
+
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        ctx.fillStyle = '#f0c030';
+        ctx.font = 'bold 16px monospace';
+        ctx.fillText('DEV — JUMP TO LEVEL', CANVAS_W / 2, by + 32);
+
+        ctx.fillStyle = '#cccccc';
+        ctx.font = '15px monospace';
+        ctx.fillText('Press  1 – 6  to start that level', CANVAS_W / 2, by + 62);
+
+        ctx.fillStyle = '#777788';
+        ctx.font = '13px monospace';
+        ctx.fillText('ESC to cancel', CANVAS_W / 2, by + 90);
 
         ctx.textAlign = 'left';
     }

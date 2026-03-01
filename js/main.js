@@ -18,7 +18,7 @@ import {
     TRICK_FLASH_DUR,
 } from './constants.js';
 
-const STATE = { TITLE: 0, TAKEOFF: 1, FLYING: 2, CRASHED: 3, LANDED: 4, PAUSED: 5, INSTRUCTIONS: 6 };
+const STATE = { TITLE: 0, TAKEOFF: 1, FLYING: 2, CRASHED: 3, LANDED: 4, PAUSED: 5, INSTRUCTIONS: 6, DEV_SELECT: 7 };
 
 class Game {
     constructor(canvas) {
@@ -55,6 +55,9 @@ class Game {
         this.prevPause     = false;
         this.prevHelp      = false;
         this.explodeDone   = false;
+
+        // Dev cheat: A×4 on title → level select
+        this.devKeyCount = 0;
     }
 
     get cameraX()   { return this.plane.worldX - PLANE_SCREEN_X; }
@@ -65,6 +68,9 @@ class Game {
     async start() {
         initInput();
         prefetchAudio();
+
+        // Dev cheat keydown listener (separate from held-key input system)
+        window.addEventListener('keydown', e => this._devKeydown(e));
 
         // Trick callback: award points (with level multiplier) + trigger fanfare
         initTricks((name, pts) => {
@@ -151,6 +157,10 @@ class Game {
                 if (spaceHit || helpHit) this.state = STATE.TITLE;
                 break;
 
+            case STATE.DEV_SELECT:
+                // Handled entirely in _devKeydown; block all other input here
+                break;
+
             case STATE.CRASHED:
                 this.explodeDone = this.plane.updateExplosion(dt);
                 if (spaceHit && this.explodeDone) {
@@ -195,6 +205,34 @@ class Game {
                     }
                 }
                 break;
+        }
+    }
+
+    // ── Dev cheat ─────────────────────────────────────────────────────────────
+
+    _devKeydown(e) {
+        if (this.state === STATE.TITLE) {
+            if (e.code === 'KeyA') {
+                this.devKeyCount++;
+                if (this.devKeyCount >= 4) {
+                    this.devKeyCount = 0;
+                    this.state = STATE.DEV_SELECT;
+                }
+            } else {
+                this.devKeyCount = 0;
+            }
+        } else if (this.state === STATE.DEV_SELECT) {
+            if (e.code === 'Escape') {
+                this.state = STATE.TITLE;
+            } else {
+                const n = parseInt(e.key, 10);
+                if (n >= 1 && n <= LEVEL_COUNT) {
+                    this.levelIdx   = n - 1;
+                    this.carryOver  = 0;
+                    this.totalScore = 0;
+                    this._startLevel();
+                }
+            }
         }
     }
 
@@ -305,6 +343,12 @@ class Game {
 
         if (this.state === STATE.TITLE) {
             this.hud.drawTitle(ctx, this.bestScore);
+            return;
+        }
+
+        if (this.state === STATE.DEV_SELECT) {
+            this.hud.drawTitle(ctx, this.bestScore);
+            this.hud.drawDevSelect(ctx);
             return;
         }
 
