@@ -3,7 +3,7 @@ Side-scrolling retro game flying RC aircraft through obstacles. Created together
 
 Me and my son love building real-life RC models - airplanes, quadcopters, boats, cars. Here's a video of one of our planes https://www.youtube.com/watch?v=CA7lUC5X1cM That was the inspiration behind this little game.
 
-Here is a video of the gameplay https://youtu.be/aaCfQUKCJPw
+Here is a video of the gameplay https://youtu.be/aaCfQUKCJPw And you can play the game here https://cloudwalker-app.vercel.app/
 
 
 ---------------------------------------------------
