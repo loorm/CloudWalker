@@ -1,4 +1,4 @@
-import { CANVAS_W, CANVAS_H, HUD_H, BATTERY_MAX, GROUND_Y } from './constants.js';
+import { CANVAS_W, CANVAS_H, HUD_H, BATTERY_MAX, GROUND_Y, VX_MIN, VX_MAX } from './constants.js';
 import { img } from './assets.js';
 
 const CELL_COLOURS = ['#ff2020', '#ff6600', '#ffaa00', '#ccee00', '#88ee00', '#44ee00'];
@@ -45,22 +45,23 @@ export class HUD {
             ctx.strokeRect(cx + 0.5, cy + 0.5, CELL_W - 1, CELL_H - 1);
         }
 
-        // Speed indicator (airborne only)
+        // Speed indicator (airborne only) — mapped to km/h (15 km/h stall … 150 km/h full throttle)
         if (vx !== null) {
-            ctx.fillStyle = vx <= 180 ? '#44ee00' : vx <= 260 ? '#ffcc00' : '#ff4444';
+            const kmh = Math.round(15 + (vx - VX_MIN) / (VX_MAX - VX_MIN) * (150 - 15));
+            ctx.fillStyle = kmh <= 66 ? '#44ee00' : kmh <= 99 ? '#ffcc00' : '#ff4444';
             ctx.font = 'bold 14px monospace';
-            ctx.fillText(`SPD:${String(Math.round(vx)).padStart(4, ' ')}`, 445, midY);
+            ctx.fillText(`SPD: ${String(kmh).padStart(3, ' ')} km/h`, 445, midY);
         }
 
         // Score
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 15px monospace';
-        ctx.fillText(`SCORE: ${String(score).padStart(3, '0')}`, 530, midY);
+        ctx.fillText(`SCORE: ${String(score).padStart(3, '0')}`, 580, midY);
 
         // Timer
         const mins = Math.floor(elapsed / 60);
         const secs = Math.floor(elapsed % 60);
-        ctx.fillText(`TIME: ${mins}:${String(secs).padStart(2, '0')}`, 720, midY);
+        ctx.fillText(`TIME: ${mins}:${String(secs).padStart(2, '0')}`, 760, midY);
     }
 
     // ── Trick flash ───────────────────────────────────────────────────────────

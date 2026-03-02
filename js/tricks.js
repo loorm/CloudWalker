@@ -2,7 +2,7 @@
  * Trick detection engine.
  *
  * Sequence tricks: detected from a keydown event buffer within a 0.8 s window.
- * Knife Edge:      Up + Left or Up + Right held simultaneously for 1 s.
+ * High Alpha:      Up + Right held simultaneously for 1 s.
  *
  * Longer sequences are checked before shorter ones so Death Knot / Snap Roll
  * take precedence over their sub-sequences (e.g. Aileron Roll inside Death Knot).
@@ -12,7 +12,7 @@
  *   updateTricks(dt, ...)         — call every frame from the flying update
  */
 
-import { TRICK_WINDOW, TRICK_FLASH_DUR, KNIFE_EDGE_HOLD, MIN_TRICK_Y, GROUND_Y } from './constants.js';
+import { TRICK_WINDOW, TRICK_FLASH_DUR, HIGH_ALPHA_HOLD, MIN_TRICK_Y, GROUND_Y } from './constants.js';
 
 // Longer sequences listed first so they win over shorter sub-sequences.
 // Inside Loop (↑↑), Outside Loop (↓↓) and Aileron Roll (←← / →→) removed —
@@ -24,8 +24,8 @@ const SEQ_TRICKS = [
 ];
 
 let _pressBuffer = []; // { key: string, time: number }
-let _knifeDir    = null; // 'left' | 'right' | null
-let _knifeTimer  = 0;
+let _highAlphaDir    = null; // 'left' | 'right' | null
+let _highAlphaTimer  = 0;
 let _active      = false; // tricks only fire when this is true
 let _planeY      = 0;
 let _onTrick     = null;  // callback(name, pts)
@@ -39,43 +39,42 @@ export function initTricks(callback) {
 
 /**
  * Call every airborne frame from main._updateFlying.
- * Handles Knife Edge hold detection and enables/disables the sequence buffer.
+ * Handles High Alpha hold detection and enables/disables the sequence buffer.
  */
-export function updateTricks(dt, isAirborne, planeY, upFn, leftFn, rightFn) {
+export function updateTricks(dt, isAirborne, planeY, upFn, rightFn) {
     _active = isAirborne && planeY < GROUND_Y - MIN_TRICK_Y;
     _planeY = planeY;
 
     if (!_active) {
-        _knifeDir   = null;
-        _knifeTimer = 0;
+        _highAlphaDir   = null;
+        _highAlphaTimer = 0;
         return;
     }
 
-    // Knife Edge: Up + Left or Up + Right held for KNIFE_EDGE_HOLD seconds
-    const holdLeft  = upFn() && leftFn();
+    // High Alpha: Up + Right held for HIGH_ALPHA_HOLD seconds
     const holdRight = upFn() && rightFn();
 
-    if (holdLeft && _knifeDir === 'left') {
-        _knifeTimer += dt;
-    } else if (holdRight && _knifeDir === 'right') {
-        _knifeTimer += dt;
-    } else if (holdLeft) {
-        _knifeDir   = 'left';
-        _knifeTimer = 0;
+    if (holdRight && _highAlphaDir === 'right') {
+        _highAlphaTimer += dt;
     } else if (holdRight) {
-        _knifeDir   = 'right';
-        _knifeTimer = 0;
+        _highAlphaDir   = 'right';
+        _highAlphaTimer = 0;
     } else {
-        _knifeDir   = null;
-        _knifeTimer = 0;
+        _highAlphaDir   = null;
+        _highAlphaTimer = 0;
     }
 
-    if (_knifeDir && _knifeTimer >= KNIFE_EDGE_HOLD) {
-        _knifeDir   = null;
-        _knifeTimer = 0;
+    if (_highAlphaDir && _highAlphaTimer >= HIGH_ALPHA_HOLD) {
+        _highAlphaDir   = null;
+        _highAlphaTimer = 0;
         _pressBuffer = [];
-        _fire('Knife Edge', 1);
+        _fire('High Alpha', 1);
     }
+}
+
+/** True while Up + Right are held and the high alpha timer is running. */
+export function isHighAlphaActive() {
+    return _highAlphaDir !== null;
 }
 
 // ── Internal ──────────────────────────────────────────────────────────────────

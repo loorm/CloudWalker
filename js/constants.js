@@ -56,9 +56,18 @@ export const EXPLOSION_DURATION = 0.7; // seconds
 // Tricks
 export const TRICK_WINDOW       = 0.8;  // sequence input window (seconds)
 export const TRICK_FLASH_DUR    = 2.0;  // how long trick name stays on screen
-export const KNIFE_EDGE_HOLD    = 1.0;  // hold duration for Knife Edge
+export const HIGH_ALPHA_HOLD         = 1.0;  // hold duration for High Alpha
+export const HIGH_ALPHA_TILT_ANGLE   = 1.35; // radians (~77°) tilt at full high alpha
+export const HIGH_ALPHA_WOBBLE_AMP   = 0.09; // radians (~5°) wobble amplitude while held
+export const HIGH_ALPHA_WOBBLE_RATE  = 19;   // radians/s (~3 Hz) wobble frequency
+export const HIGH_ALPHA_TILT_SPEED   = 8;    // lerp speed for entry/exit (full tilt in ~0.25 s)
 export const MIN_TRICK_Y        = 50;   // min px above GROUND_Y for tricks to fire
 export const DEATH_KNOT_SPIN    = 0.45; // seconds for the 360° visual spin
+export const DEATH_KNOT_ARC_H   = 28;   // px the plane rises at the top of the inside loop
+export const CORKSCREW_SPIN     = 0.55; // seconds for one full corkscrew roll
+export const CORKSCREW_ARC_H    = 22;   // px the plane climbs during the corkscrew
+export const SNAP_ROLL_SPIN     = 1.10; // seconds for snap roll (2× slower than corkscrew)
+export const SNAP_ROLL_ARC_H    = 22;   // px the plane drops during the snap roll
 
 // Level progression
 export const LEVEL_COUNT              = 6;

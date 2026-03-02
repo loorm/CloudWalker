@@ -1,13 +1,13 @@
 import { initInput, UP, DOWN, LEFT, RIGHT, SPACE, anyKey, PAUSE_KEY, KEY_HELP } from './input.js';
 import { loadImages } from './assets.js';
 import {
-    prefetchAudio, initAudio, startEngine, stopEngine, setEnginePitch, playCrash,
-    playTrickFanfare, playBatteryBeep, suspendAudio, resumeAudio,
+    prefetchAudio, initAudio, startMusic, startEngine, stopEngine, setEnginePitch, playCrash,
+    playTrickFanfare, playBatteryBeep, suspendAudio, resumeAudio, fadeOutMusic,
 } from './audio.js';
 import { Plane } from './plane.js';
 import { World } from './world.js';
 import { HUD }   from './hud.js';
-import { initTricks, updateTricks } from './tricks.js';
+import { initTricks, updateTricks, isHighAlphaActive } from './tricks.js';
 import { LEVEL_DATA } from './levels.js';
 import {
     CANVAS_W, CANVAS_H, HUD_H, GROUND_Y,
@@ -80,6 +80,8 @@ class Game {
             this.world.addScore(actualPts);
             this.trickFlash = { name, pts: actualPts, timer: TRICK_FLASH_DUR };
             if (name === 'Death Knot') this.plane.startDeathKnot();
+            if (name === 'Corkscrew')  this.plane.startCorkscrew();
+            if (name === 'Snap Roll')  this.plane.startSnapRoll();
             playTrickFanfare();
         });
 
@@ -140,6 +142,7 @@ class Game {
                     startEngine();
                 } else if (this.plane.worldX > TAKEOFF_RUNWAY_END) {
                     playCrash();
+                    fadeOutMusic(7);
                     this.crashReason = '';
                     this.state = STATE.CRASHED;
                 }
@@ -254,6 +257,7 @@ class Game {
         this.explodeDone  = false;
         this.trickFlash   = null;
         stopEngine();
+        startMusic();
         this.state = STATE.TAKEOFF;
     }
 
@@ -276,7 +280,8 @@ class Game {
         }
 
         // Trick detection
-        updateTricks(dt, true, this.plane.y, UP, LEFT, RIGHT);
+        this.plane.setHighAlpha(isHighAlphaActive());
+        updateTricks(dt, true, this.plane.y, UP, RIGHT);
 
         // Tick world entities with actual dt
         this.world.tick(dt);
@@ -309,6 +314,7 @@ class Game {
                 this.state = STATE.LANDED;
             } else {
                 playCrash();
+                fadeOutMusic(7);
                 this.crashReason = '';
                 this.state = STATE.CRASHED;
             }
@@ -320,6 +326,7 @@ class Game {
             this.world.checkNpcCollision(this.plane)) {
             stopEngine();
             playCrash();
+            fadeOutMusic(7);
             this.crashReason = '';
             this.state = STATE.CRASHED;
             return;
@@ -329,6 +336,7 @@ class Game {
         if (this.world.checkBirdCollision(this.plane)) {
             stopEngine();
             playCrash();
+            fadeOutMusic(7);
             this.crashReason = 'bird';
             this.state = STATE.CRASHED;
             return;
@@ -338,6 +346,7 @@ class Game {
         if (this.battery <= 0) {
             stopEngine();
             playCrash();
+            fadeOutMusic(7);
             this.crashReason = '';
             this.state = STATE.CRASHED;
         }

@@ -4,7 +4,10 @@ import {
     VX_MIN, VX_MAX, VX_ACCEL, VX_GROUND_ACCEL,
     VY_LIFT_ACCEL, VY_DESCEND_EXTRA, VY_MAX,
     LIFTOFF_VX, EXPLOSION_FRAME_H, EXPLOSION_DURATION,
-    DEATH_KNOT_SPIN,
+    DEATH_KNOT_SPIN, DEATH_KNOT_ARC_H,
+    CORKSCREW_SPIN, CORKSCREW_ARC_H,
+    SNAP_ROLL_SPIN, SNAP_ROLL_ARC_H,
+    HIGH_ALPHA_TILT_ANGLE, HIGH_ALPHA_WOBBLE_AMP, HIGH_ALPHA_WOBBLE_RATE, HIGH_ALPHA_TILT_SPEED,
 } from './constants.js';
 import { img } from './assets.js';
 
@@ -19,12 +22,29 @@ export class Plane {
         this.vx            = 0;
         this.vy            = 0;
         this.airborne      = false;
-        this.explodeTimer  = 0;
+        this.explodeTimer   = 0;
         this.deathKnotTimer = 0;
+        this.corkscrewTimer = 0;
+        this.snapRollTimer  = 0;
+        this._highAlphaActive   = false;
+        this.highAlphaTilt      = 0;
+        this.highAlphaTime      = 0;
     }
 
     startDeathKnot() {
         this.deathKnotTimer = DEATH_KNOT_SPIN;
+    }
+
+    startCorkscrew() {
+        this.corkscrewTimer = CORKSCREW_SPIN;
+    }
+
+    startSnapRoll() {
+        this.snapRollTimer = SNAP_ROLL_SPIN;
+    }
+
+    setHighAlpha(active) {
+        this._highAlphaActive = active;
     }
 
     // ── Bounding box helpers (world-space horizontal, screen-space vertical) ──
@@ -75,9 +95,15 @@ export class Plane {
         this.y      += this.vy * dt;
         this.worldX += this.vx * dt;
 
-        if (this.deathKnotTimer > 0) {
-            this.deathKnotTimer = Math.max(0, this.deathKnotTimer - dt);
-        }
+        if (this.deathKnotTimer  > 0) this.deathKnotTimer  = Math.max(0, this.deathKnotTimer  - dt);
+        if (this.corkscrewTimer  > 0) this.corkscrewTimer  = Math.max(0, this.corkscrewTimer  - dt);
+        if (this.snapRollTimer   > 0) this.snapRollTimer   = Math.max(0, this.snapRollTimer   - dt);
+
+        // High Alpha tilt — smoothly lerp in/out
+        const knifeTarget = this._highAlphaActive ? 1 : 0;
+        this.highAlphaTilt += (knifeTarget - this.highAlphaTilt) * Math.min(1, HIGH_ALPHA_TILT_SPEED * dt);
+        if (this._highAlphaActive) this.highAlphaTime += dt;
+        else                   this.highAlphaTime  = 0;
     }
 
     // ── Update: explosion animation ──────────────────────────────────────────
@@ -94,14 +120,34 @@ export class Plane {
         const planeImg = img('plane');
         if (planeImg) {
             // mustang.png already faces right — no base rotation needed.
-            // During a Death Knot, add a full 360° spin.
-            let angle = 0;
+            let angle  = 0;
+            let yOff   = 0;
+            let scaleY = 1;
+
             if (this.deathKnotTimer > 0) {
-                const progress = 1 - this.deathKnotTimer / DEATH_KNOT_SPIN;
-                angle = progress * Math.PI * 2;
+                // Inside loop: CCW spin (nose up first) + half-sine vertical arc
+                const p = 1 - this.deathKnotTimer / DEATH_KNOT_SPIN;
+                angle = -p * Math.PI * 2;
+                yOff  = -DEATH_KNOT_ARC_H * Math.sin(p * Math.PI);
+            } else if (this.corkscrewTimer > 0) {
+                // Corkscrew: two roll cycles, arcs UP
+                const p = 1 - this.corkscrewTimer / CORKSCREW_SPIN;
+                scaleY = Math.cos(p * Math.PI * 4);
+                yOff   = -CORKSCREW_ARC_H * Math.sin(p * Math.PI);
+            } else if (this.snapRollTimer > 0) {
+                // Snap Roll: one roll cycle (slower), arcs DOWN
+                const p = 1 - this.snapRollTimer / SNAP_ROLL_SPIN;
+                scaleY = Math.cos(p * Math.PI * 2);
+                yOff   = +SNAP_ROLL_ARC_H * Math.sin(p * Math.PI);
+            } else if (this.highAlphaTilt > 0.01) {
+                // High Alpha: tilt to ~77° CCW (nose up) with gentle wobble while held
+                const wobble = HIGH_ALPHA_WOBBLE_AMP * Math.sin(this.highAlphaTime * HIGH_ALPHA_WOBBLE_RATE);
+                angle = -(HIGH_ALPHA_TILT_ANGLE + wobble) * this.highAlphaTilt;
             }
-            ctx.translate(PLANE_SCREEN_X, this.y);
+
+            ctx.translate(PLANE_SCREEN_X, this.y + yOff);
             ctx.rotate(angle);
+            ctx.scale(1, scaleY);
             ctx.drawImage(planeImg, 0, 0, planeImg.width, planeImg.height,
                 -PLANE_W / 2, -PLANE_H / 2, PLANE_W, PLANE_H);
         } else {

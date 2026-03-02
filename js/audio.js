@@ -24,6 +24,7 @@ let birdFlutterBuf = null;
 let engineNode   = null;
 let musicNode    = null;
 let engineGain   = null;
+let musicGain    = null;
 let masterGain   = null;
 let initialized  = false;
 
@@ -69,11 +70,21 @@ function makeSource(buffer, loop) {
 export function startMusic() {
     if (!ctx || !musicBuf || musicNode) return;
     musicNode = makeSource(musicBuf, true);
-    const g = ctx.createGain();
-    g.gain.value = 0.45;
-    musicNode.connect(g);
-    g.connect(masterGain);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 0.45;
+    musicNode.connect(musicGain);
+    musicGain.connect(masterGain);
     musicNode.start(0);
+}
+
+export function fadeOutMusic(seconds) {
+    if (!ctx || !musicNode || !musicGain) return;
+    const now = ctx.currentTime;
+    musicGain.gain.setValueAtTime(musicGain.gain.value, now);
+    musicGain.gain.linearRampToValueAtTime(0, now + seconds);
+    musicNode.stop(now + seconds);
+    musicNode = null;
+    musicGain = null;
 }
 
 export function startEngine() {
