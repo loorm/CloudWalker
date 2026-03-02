@@ -316,7 +316,7 @@ export class HUD {
         txt('When you get down to 1, a warning flashes.', col2, y); y += LH;
         txt('Look for the runway!',                      col2, y); y += LH;
         txt('Land before it hits zero.',                 col2, y); y += LH;
-        txt('Recharge costs 6 points,',                  col2, y); y += LH;
+        txt('Recharge costs 60 points,',                 col2, y); y += LH;
         txt('taken from your game points.',              col2, y); y += LH;
         txt('No recharge = no next mission.',             col2, y); y += LH;
 
@@ -399,12 +399,19 @@ export class HUD {
             );
         } else {
             ctx.fillStyle = '#ffaa44';
-            ctx.fillText('Not enough points — battery refused!', CANVAS_W / 2, CANVAS_H / 2 + 18);
+            ctx.font = '18px monospace';
+            ctx.fillText('Not enough points to recharge the battery.', CANVAS_W / 2, CANVAS_H / 2 + 14);
+            ctx.fillStyle = '#ccaaaa';
+            ctx.font = '15px monospace';
+            ctx.fillText('Fly faster to clear more obstacles.', CANVAS_W / 2, CANVAS_H / 2 + 38);
         }
 
         ctx.fillStyle = '#888888';
         ctx.font = '17px monospace';
-        ctx.fillText('Press SPACE to continue', CANVAS_W / 2, CANVAS_H / 2 + 68);
+        ctx.fillText(
+            success ? 'Press SPACE to continue' : 'Press SPACE to try again',
+            CANVAS_W / 2, CANVAS_H / 2 + 68,
+        );
 
         ctx.textAlign = 'left';
     }

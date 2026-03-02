@@ -34,7 +34,7 @@ You start with 6 cells.
 One drains every 30 seconds.
 When you get down to 1, a warning flashes. Look for runway!
 Land before it hits zero.
-Recharge costs 6 points, taken from your game points.
+Recharge costs 60 points, taken from your game points.
 No recharge = no next mission.
 
 _Have fun!_

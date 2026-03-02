@@ -167,6 +167,13 @@ export class World {
         if (!this.runwaySpawned && battery <= RUNWAY_TRIGGER_BATTERY) {
             this.runway = { worldX: cameraX + RUNWAY_AHEAD };
             this.runwaySpawned = true;
+            // Remove any obstacles that already landed inside the runway zone
+            const rEnd = this.runway.worldX + RUNWAY_W;
+            this.obstacles = this.obstacles.filter(
+                o => o.worldX + OBS_COL_W <= this.runway.worldX || o.worldX >= rEnd,
+            );
+            // Advance the spawn cursor past the runway so no new ones appear inside it
+            if (this.nextObsWorldX < rEnd) this.nextObsWorldX = rEnd + 200;
         }
     }
 

@@ -10,7 +10,9 @@ export const PLANE_H        = 36;
 export const PLANE_SCREEN_X = 200; // fixed screen X; camera tracks world X
 
 // Physics
-export const GRAVITY           = 350;  // px/s² downward
+export const GRAVITY           = 350;  // px/s² downward (used when UP or DOWN is held)
+export const GLIDE_GRAVITY     = 80;   // px/s² downward when no vertical key is held
+export const GLIDE_VY_MAX      = 200;  // max sink speed during passive glide (~45° at cruise)
 export const VX_MIN            = 60;   // minimum forward speed while airborne
 export const VX_MAX            = 380;  // maximum forward speed
 export const VX_ACCEL          = 100;  // speed change per second (air)
@@ -60,8 +62,8 @@ export const DEATH_KNOT_SPIN    = 0.45; // seconds for the 360° visual spin
 
 // Level progression
 export const LEVEL_COUNT              = 6;
-export const POINTS_TO_LAND           = 6;
-export const POINTS_TO_LAND_CHALLENGE = 12;
+export const POINTS_TO_LAND           = 60;
+export const POINTS_TO_LAND_CHALLENGE = 60;
 
 // NPC planes (oncoming traffic)
 export const NPC_W               = 60;   // display width

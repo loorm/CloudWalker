@@ -1,6 +1,7 @@
 import {
     GROUND_Y, PLANE_W, PLANE_H, PLANE_SCREEN_X,
-    GRAVITY, VX_MIN, VX_MAX, VX_ACCEL, VX_GROUND_ACCEL,
+    GRAVITY, GLIDE_GRAVITY, GLIDE_VY_MAX,
+    VX_MIN, VX_MAX, VX_ACCEL, VX_GROUND_ACCEL,
     VY_LIFT_ACCEL, VY_DESCEND_EXTRA, VY_MAX,
     LIFTOFF_VX, EXPLOSION_FRAME_H, EXPLOSION_DURATION,
     DEATH_KNOT_SPIN,
@@ -60,10 +61,15 @@ export class Plane {
             this.vx = Math.max(this.vx - VX_ACCEL * dt, VX_MIN);
         }
 
-        // Vertical: gravity always applies; Up counteracts it and adds climb
-        this.vy += GRAVITY * dt;
-        if (input.UP())   this.vy -= VY_LIFT_ACCEL * dt;
-        if (input.DOWN()) this.vy += VY_DESCEND_EXTRA * dt;
+        // Vertical: hands-off = gentle glide; UP climbs against full gravity; DOWN dives
+        if (input.DOWN()) {
+            this.vy += (GRAVITY + VY_DESCEND_EXTRA) * dt;
+        } else if (input.UP()) {
+            this.vy += (GRAVITY - VY_LIFT_ACCEL) * dt;
+        } else {
+            this.vy += GLIDE_GRAVITY * dt;
+            if (this.vy > GLIDE_VY_MAX) this.vy = GLIDE_VY_MAX;
+        }
         this.vy = Math.max(-VY_MAX, Math.min(VY_MAX, this.vy));
 
         this.y      += this.vy * dt;

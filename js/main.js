@@ -207,10 +207,9 @@ class Game {
                             this._startLevel();
                         }
                     } else {
-                        // Failed — back to title, no high score update
-                        this.levelIdx  = 0;
+                        // Not enough points to recharge — restart same level with 0 points
                         this.carryOver = 0;
-                        this.state = STATE.TITLE;
+                        this._startLevel();
                     }
                 }
                 break;
