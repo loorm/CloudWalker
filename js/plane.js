@@ -87,22 +87,17 @@ export class Plane {
         ctx.imageSmoothingEnabled = false;
         const planeImg = img('plane');
         if (planeImg) {
-            // Sprite sheet: 16 px wide, frames stacked vertically (each frame = 16×16).
-            // The prop points UP in the raw sprite → rotate 90° CW so prop faces RIGHT.
-            // During a Death Knot, add a full 360° spin on top of the base angle.
-            const frameSize = planeImg.width; // 16
-            let angle = Math.PI / 2;
+            // mustang.png already faces right — no base rotation needed.
+            // During a Death Knot, add a full 360° spin.
+            let angle = 0;
             if (this.deathKnotTimer > 0) {
                 const progress = 1 - this.deathKnotTimer / DEATH_KNOT_SPIN;
-                angle += progress * Math.PI * 2;
+                angle = progress * Math.PI * 2;
             }
             ctx.translate(PLANE_SCREEN_X, this.y);
             ctx.rotate(angle);
-            // After 90° CW rotation: rotated-x goes down, rotated-y goes left.
-            // To produce PLANE_W wide × PLANE_H tall on screen, draw PLANE_H × PLANE_W
-            // in rotated space (screen_width = draw_height, screen_height = draw_width).
-            ctx.drawImage(planeImg, 0, 0, frameSize, frameSize,
-                -PLANE_H / 2, -PLANE_W / 2, PLANE_H, PLANE_W);
+            ctx.drawImage(planeImg, 0, 0, planeImg.width, planeImg.height,
+                -PLANE_W / 2, -PLANE_H / 2, PLANE_W, PLANE_H);
         } else {
             // Fallback: blue fuselage facing right
             const dx = PLANE_SCREEN_X - PLANE_W / 2;

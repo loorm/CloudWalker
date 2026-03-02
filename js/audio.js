@@ -144,6 +144,14 @@ export function playBatteryBeep() {
     osc.stop(ctx.currentTime + 0.31);
 }
 
+export function suspendAudio() {
+    if (ctx && ctx.state === 'running') ctx.suspend();
+}
+
+export function resumeAudio() {
+    if (ctx && ctx.state === 'suspended') ctx.resume();
+}
+
 /**
  * Modulate engine pitch based on horizontal speed.
  * vx range [60, 380] maps to playbackRate [0.75, 1.4].

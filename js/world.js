@@ -359,23 +359,79 @@ export class World {
     }
 
     _drawObstacle(ctx, obs, sx) {
-        ctx.fillStyle = '#6b3a2a';
+        const BASE_W   = OBS_COL_W;
+        const TIP_W    = Math.round(BASE_W * 0.52); // narrower at tip
+        const TIP_H    = 14;
+        const STRIPE_H = 20;
+        const cx = sx + BASE_W / 2;
+
+        // Draw a single pylon: trapezoid with alternating red/white stripes and yellow tip.
+        // tipAtTop=true  → wide base at bottom (column from ground), tip points up.
+        // tipAtTop=false → wide base at top (hang from ceiling), tip points down.
+        const drawPylon = (y, h, tipAtTop) => {
+            if (h <= 0) return;
+            const topW = tipAtTop ? TIP_W  : BASE_W;
+            const botW = tipAtTop ? BASE_W : TIP_W;
+
+            ctx.save();
+
+            // Clip to trapezoid shape
+            ctx.beginPath();
+            ctx.moveTo(cx - topW / 2, y);
+            ctx.lineTo(cx + topW / 2, y);
+            ctx.lineTo(cx + botW / 2, y + h);
+            ctx.lineTo(cx - botW / 2, y + h);
+            ctx.closePath();
+            ctx.clip();
+
+            if (tipAtTop) {
+                // Paint stripes from base (bottom) up toward tip, then yellow cap at top
+                const bodyBot = y + h;
+                const bodyTop = y + TIP_H;
+                let row = 0;
+                for (let ry = bodyBot; ry > bodyTop; ry -= STRIPE_H) {
+                    ctx.fillStyle = row % 2 === 0 ? '#cc0000' : '#ffffff';
+                    const sh = Math.min(STRIPE_H, ry - bodyTop);
+                    ctx.fillRect(cx - BASE_W, ry - sh, BASE_W * 2, sh);
+                    row++;
+                }
+                ctx.fillStyle = '#ffdd00';
+                ctx.fillRect(cx - BASE_W, y, BASE_W * 2, TIP_H);
+            } else {
+                // Paint stripes from base (top) down toward tip, then yellow cap at bottom
+                const bodyTop = y;
+                const bodyBot = y + h - TIP_H;
+                let row = 0;
+                for (let ry = bodyTop; ry < bodyBot; ry += STRIPE_H) {
+                    ctx.fillStyle = row % 2 === 0 ? '#cc0000' : '#ffffff';
+                    ctx.fillRect(cx - BASE_W, ry, BASE_W * 2, Math.min(STRIPE_H, bodyBot - ry));
+                    row++;
+                }
+                ctx.fillStyle = '#ffdd00';
+                ctx.fillRect(cx - BASE_W, y + h - TIP_H, BASE_W * 2, TIP_H);
+            }
+
+            ctx.restore();
+
+            // Thin outline for definition
+            ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(cx - topW / 2, y);
+            ctx.lineTo(cx + topW / 2, y);
+            ctx.lineTo(cx + botW / 2, y + h);
+            ctx.lineTo(cx - botW / 2, y + h);
+            ctx.closePath();
+            ctx.stroke();
+        };
+
         if (obs.type === 'column') {
-            ctx.fillRect(sx, obs.y, OBS_COL_W, obs.h);
-            ctx.fillStyle = '#8b4a2a';
-            ctx.fillRect(sx - 4, obs.y, OBS_COL_W + 8, 8);
+            drawPylon(obs.y, obs.h, true);           // base at ground, tip up
         } else if (obs.type === 'hang') {
-            ctx.fillRect(sx, obs.y, OBS_COL_W, obs.h);
-            ctx.fillStyle = '#8b4a2a';
-            ctx.fillRect(sx - 4, obs.y + obs.h - 8, OBS_COL_W + 8, 8);
+            drawPylon(obs.y, obs.h, false);          // base at ceiling, tip down
         } else {
-            ctx.fillRect(sx, HUD_H, OBS_COL_W, obs.topH);
-            ctx.fillStyle = '#8b4a2a';
-            ctx.fillRect(sx - 4, HUD_H + obs.topH - 8, OBS_COL_W + 8, 8);
-            ctx.fillStyle = '#6b3a2a';
-            ctx.fillRect(sx, obs.botY, OBS_COL_W, obs.botH);
-            ctx.fillStyle = '#8b4a2a';
-            ctx.fillRect(sx - 4, obs.botY, OBS_COL_W + 8, 8);
+            drawPylon(HUD_H,    obs.topH,  false);   // top gate piece: tip down
+            drawPylon(obs.botY, obs.botH,  true);    // bottom gate piece: tip up
         }
     }
 
@@ -403,11 +459,9 @@ export class World {
             const npcImg = img(npc.imgKey);
             ctx.save();
             ctx.translate(sx, npc.y);
-            ctx.rotate(-Math.PI / 2); // prop faces LEFT (coming from right)
             if (npcImg) {
-                const fs = npcImg.width; // 16
-                ctx.drawImage(npcImg, 0, 0, fs, fs,
-                    -NPC_H / 2, -NPC_W / 2, NPC_H, NPC_W);
+                ctx.drawImage(npcImg, 0, 0, npcImg.width, npcImg.height,
+                    -NPC_W / 2, -NPC_H / 2, NPC_W, NPC_H);
             } else {
                 ctx.fillStyle = '#cc3322';
                 ctx.fillRect(-NPC_W / 2, -NPC_H / 2, NPC_W, NPC_H);

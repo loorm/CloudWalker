@@ -20,19 +20,19 @@ export async function loadImages() {
     const pl    = `${base}/Planes_Obstacles/Planes`;
     await Promise.all([
         // Player plane
-        loadImage('plane',       `${pl}/BluePlane.png`),
+        loadImage('plane',       `${pl}/mustang.png`),
         loadImage('explosion',   `${pl}/Explosion_16x16.png`),
         // NPC planes
-        loadImage('npc_green',   `${pl}/GreenPlane.png`),
-        loadImage('npc_orange',  `${pl}/OrangePlane.png`),
-        loadImage('npc_purple',  `${pl}/PurplePlane.png`),
+        loadImage('npc_green',   `${pl}/cessna.png`),
+        loadImage('npc_orange',  `${pl}/piper.png`),
+        loadImage('npc_purple',  `${pl}/corsair.png`),
         // Ground / UI sprites
         loadImage('tilemap',     `${base}/Planes_Obstacles/Enviornment/Tilemap_One.png`),
         loadImage('clouds',      `${base}/Planes_Obstacles/Enviornment/UpdatedClouds.png`),
         // Backgrounds — keyed bg_1 … bg_5
         loadImage('bg_1', `${env}/background_01.png`),
         loadImage('bg_2', `${env}/background_02.png`),
-        loadImage('bg_3', `${env}/background_03.png`),
+        loadImage('bg_3', `${env}/background_03_3.png`),
         loadImage('bg_4', `${env}/background_04.png`),
         loadImage('bg_5', `${env}/background_05.png`),
         // Birds

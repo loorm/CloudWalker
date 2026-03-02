@@ -27,7 +27,7 @@ export const LEVEL_DATA = [
     },
     {
         num:             2,
-        name:            'Talvel rannas',
+        name:            'Talvine rand',
         bgKey:           'bg_2',
         obsGapFactor:    0.90,
         trafficCount:    2,
@@ -40,20 +40,20 @@ export const LEVEL_DATA = [
     },
     {
         num:             3,
-        name:            'Tulemäed',
+        name:            'Angaar',
         bgKey:           'bg_3',
         obsGapFactor:    0.82,
         trafficCount:    3,
         trafficSpeed:    245,
-        birdCount:       2,
-        birdSpeed:       62,
+        birdCount:       0,
+        birdSpeed:       0,
         turbulence:      0,
         pointMultiplier: 1,
         storm:           false,
     },
     {
         num:             4,
-        name:            'Suvel rannas',
+        name:            'Suvine rand',
         bgKey:           'bg_4',
         obsGapFactor:    0.72,
         trafficCount:    4,
@@ -79,7 +79,7 @@ export const LEVEL_DATA = [
     },
     {
         num:             6,
-        name:            'Kollasel Tormisel Päeval',
+        name:            'Kollasel vihmase ilmaga',
         bgKey:           'bg_1',        // same meadow, storm-tinted
         obsGapFactor:    0.50,
         trafficCount:    12,

@@ -2,7 +2,7 @@ import { initInput, UP, DOWN, LEFT, RIGHT, SPACE, anyKey, PAUSE_KEY, KEY_HELP } 
 import { loadImages } from './assets.js';
 import {
     prefetchAudio, initAudio, startEngine, stopEngine, setEnginePitch, playCrash,
-    playTrickFanfare, playBatteryBeep,
+    playTrickFanfare, playBatteryBeep, suspendAudio, resumeAudio,
 } from './audio.js';
 import { Plane } from './plane.js';
 import { World } from './world.js';
@@ -144,13 +144,17 @@ class Game {
             case STATE.FLYING:
                 if (pauseHit) {
                     this.state = STATE.PAUSED;
+                    suspendAudio();
                     break;
                 }
                 this._updateFlying(dt);
                 break;
 
             case STATE.PAUSED:
-                if (pauseHit) this.state = STATE.FLYING;
+                if (pauseHit) {
+                    this.state = STATE.FLYING;
+                    resumeAudio();
+                }
                 break;
 
             case STATE.INSTRUCTIONS:
