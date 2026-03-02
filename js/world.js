@@ -20,11 +20,12 @@ const NPC_KEYS  = ['npc_green', 'npc_orange', 'npc_purple'];
 
 // ── Factory helpers ───────────────────────────────────────────────────────────
 
-function makeNpc(worldX, y, speed) {
+function makeNpc(worldX, y, speed, fromBehind = false) {
     return {
         worldX,
         y,
         speed,
+        fromBehind,
         imgKey: NPC_KEYS[Math.floor(Math.random() * NPC_KEYS.length)],
     };
 }
@@ -180,15 +181,25 @@ export class World {
     // ── NPC planes ────────────────────────────────────────────────────────────
 
     _updateNpcs(cameraX, cfg) {
-        const dt_ref = 1 / 60; // caller passes dt via update(); we don't have it here
-        // NPC movement is done in updateWithDt instead — see below
-        this.npcs = this.npcs.filter(n => n.worldX > cameraX - 200);
+        // Remove NPCs that have flown off their respective screen edge
+        this.npcs = this.npcs.filter(n =>
+            n.fromBehind
+                ? n.worldX < cameraX + CANVAS_W + 200   // overtaking: gone off right
+                : n.worldX > cameraX - 200,              // oncoming:   gone off left
+        );
 
         // Spawn if below cap
         if (this.npcs.length < cfg.trafficCount && this.npcTimer <= 0) {
-            const margin = NPC_H / 2 + 10;
-            const y = HUD_H + margin + Math.random() * (PLAY_H - margin * 2);
-            this.npcs.push(makeNpc(cameraX + CANVAS_W + 120, y, cfg.trafficSpeed));
+            const margin      = NPC_H / 2 + 10;
+            const y           = HUD_H + margin + Math.random() * (PLAY_H - margin * 2);
+            const fromBehind  = cfg.trafficFromBehind && Math.random() < 0.4;
+            const speed       = fromBehind
+                ? (cfg.trafficBehindSpeed ?? cfg.trafficSpeed * 1.5)
+                : cfg.trafficSpeed;
+            const spawnX      = fromBehind
+                ? cameraX - NPC_W - 50          // spawn just off the left edge
+                : cameraX + CANVAS_W + 120;      // spawn just off the right edge
+            this.npcs.push(makeNpc(spawnX, y, speed, fromBehind));
             this.npcTimer = NPC_SPAWN_INTERVAL + (Math.random() - 0.5) * NPC_SPAWN_JITTER;
         }
     }
@@ -218,7 +229,8 @@ export class World {
      * Move NPCs and birds. Called separately with actual dt so timers are accurate.
      */
     tick(dt) {
-        for (const npc of this.npcs)   npc.worldX -= npc.speed * dt;
+        for (const npc of this.npcs)
+            npc.worldX += (npc.fromBehind ? npc.speed : -npc.speed) * dt;
         for (const bird of this.birds) {
             bird.worldX   -= bird.speed * dt;
             bird.vy       += (Math.random() - 0.5) * 280 * dt; // erratic vertical
@@ -468,6 +480,8 @@ export class World {
             const npcImg = img(npc.imgKey);
             ctx.save();
             ctx.translate(sx, npc.y);
+            // Sprites face left; overtaking NPCs fly right so flip them horizontally
+            if (npc.fromBehind) ctx.scale(-1, 1);
             if (npcImg) {
                 ctx.drawImage(npcImg, 0, 0, npcImg.width, npcImg.height,
                     -NPC_W / 2, -NPC_H / 2, NPC_W, NPC_H);

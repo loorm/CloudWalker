@@ -35,6 +35,7 @@ export async function loadImages() {
         loadImage('bg_3', `${env}/background_03_3.png`),
         loadImage('bg_4', `${env}/background_04.png`),
         loadImage('bg_5', `${env}/background_05.png`),
+        loadImage('bg_6', `${env}/background_06.png`),
         // Birds
         loadImage('bird', `${base}/Birds/Textuur/BirdSprite.png`),
         // Title screen

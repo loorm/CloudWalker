@@ -79,7 +79,7 @@ export const LEVEL_DATA = [
     },
     {
         num:             6,
-        name:            'Kollasel vihmase ilmaga',
+        name:            'Kollane tormisel päeval',
         bgKey:           'bg_1',        // same meadow, storm-tinted
         obsGapFactor:    0.50,
         trafficCount:    12,
@@ -91,4 +91,20 @@ export const LEVEL_DATA = [
         storm:           true,
         challenge:       true,
     },
+    {
+        num:                7,
+        name:               'Prisma parkla',
+        bgKey:              'bg_6',
+        obsGapFactor:       0.60,
+        trafficCount:       6,
+        trafficSpeed:       325,
+        trafficFromBehind:  true,
+        trafficBehindSpeed: 480,
+        birdCount:          6,
+        birdSpeed:          82,
+        turbulence:         65,
+        pointMultiplier:    1,
+        storm:              false,
+    },
+    
 ];

@@ -70,7 +70,7 @@ export const SNAP_ROLL_SPIN     = 1.10; // seconds for snap roll (2× slower tha
 export const SNAP_ROLL_ARC_H    = 22;   // px the plane drops during the snap roll
 
 // Level progression
-export const LEVEL_COUNT              = 6;
+export const LEVEL_COUNT              = 8;
 export const POINTS_TO_LAND           = 60;
 export const POINTS_TO_LAND_CHALLENGE = 60;
 
