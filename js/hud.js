@@ -332,16 +332,18 @@ export class HUD {
         ctx.textAlign = 'left';
     }
 
-    drawCrashed(ctx, score, isBirdstrike = false) {
-        ctx.fillStyle = isBirdstrike ? 'rgba(10, 40, 0, 0.78)' : 'rgba(60, 0, 0, 0.78)';
+    drawCrashed(ctx, score, crashReason = '') {
+        const isBird  = crashReason === 'bird';
+        const isFloor = crashReason === 'floor';
+        ctx.fillStyle = isBird ? 'rgba(10, 40, 0, 0.78)' : isFloor ? 'rgba(80, 30, 0, 0.78)' : 'rgba(60, 0, 0, 0.78)';
         ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        ctx.fillStyle = isBirdstrike ? '#aaff22' : '#ff4444';
+        ctx.fillStyle = isBird ? '#aaff22' : isFloor ? '#ff8822' : '#ff4444';
         ctx.font = 'bold 64px monospace';
-        ctx.fillText(isBirdstrike ? 'BIRDSTRIKE!' : 'CRASHED!', CANVAS_W / 2, CANVAS_H / 2 - 55);
+        ctx.fillText(isBird ? 'BIRDSTRIKE!' : isFloor ? 'FLOOR MORT!' : 'CRASHED!', CANVAS_W / 2, CANVAS_H / 2 - 55);
 
         ctx.fillStyle = '#ffffff';
         ctx.font = '24px monospace';

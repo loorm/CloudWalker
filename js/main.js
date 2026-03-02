@@ -16,7 +16,7 @@ import {
     TAKEOFF_RUNWAY_END,
     LAND_VX_MAX, LAND_VY_MAX, LIFTOFF_VX,
     LEVEL_COUNT, POINTS_TO_LAND, POINTS_TO_LAND_CHALLENGE,
-    TRICK_FLASH_DUR,
+    TRICK_FLASH_DUR, EXPLOSION_DURATION,
 } from './constants.js';
 
 const STATE = { TITLE: 0, TAKEOFF: 1, FLYING: 2, CRASHED: 3, LANDED: 4, PAUSED: 5, INSTRUCTIONS: 6, DEV_SELECT: 7 };
@@ -315,15 +315,16 @@ class Game {
             } else {
                 playCrash();
                 fadeOutMusic(7);
-                this.crashReason = '';
+                this.crashReason = 'floor';
                 this.state = STATE.CRASHED;
             }
             return;
         }
 
         // Obstacle / NPC collision
-        if (this.world.checkObstacleCollision(this.plane) ||
-            this.world.checkNpcCollision(this.plane)) {
+        const collidedNpc = this.world.checkNpcCollision(this.plane);
+        if (this.world.checkObstacleCollision(this.plane) || collidedNpc) {
+            if (collidedNpc) collidedNpc.exploding = true;
             stopEngine();
             playCrash();
             fadeOutMusic(7);
@@ -374,11 +375,12 @@ class Game {
             return;
         }
 
-        this.world.draw(ctx, this.cameraX);
+        const explodeProgress = this.plane.explodeTimer / EXPLOSION_DURATION;
+        this.world.draw(ctx, this.cameraX, explodeProgress);
 
         if (this.state === STATE.CRASHED) {
             this.plane.drawExplosion(ctx);
-            if (this.explodeDone) this.hud.drawCrashed(ctx, this.world.score, this.crashReason === 'bird');
+            if (this.explodeDone) this.hud.drawCrashed(ctx, this.world.score, this.crashReason);
         } else {
             this.plane.draw(ctx);
 

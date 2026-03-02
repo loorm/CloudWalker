@@ -279,9 +279,9 @@ export class World {
             if (right  > npc.worldX - NPC_W / 2 &&
                 left   < npc.worldX + NPC_W / 2 &&
                 bottom > npc.y      - NPC_H / 2 &&
-                top    < npc.y      + NPC_H / 2) return true;
+                top    < npc.y      + NPC_H / 2) return npc;
         }
-        return false;
+        return null;
     }
 
     checkBirdCollision(plane) {
@@ -307,7 +307,7 @@ export class World {
 
     // ── Rendering ─────────────────────────────────────────────────────────────
 
-    draw(ctx, cameraX) {
+    draw(ctx, cameraX, npcExplodeProgress = 0) {
         this._drawBackground(ctx, cameraX);
         if (this.levelCfg.storm) this._drawStormOverlay(ctx);
         this._drawGround(ctx);
@@ -315,7 +315,7 @@ export class World {
         this._drawRunwayAt(ctx, cameraX, TAKEOFF_RUNWAY_START, TAKEOFF_RUNWAY_END - TAKEOFF_RUNWAY_START);
         if (this.runway) this._drawRunwayAt(ctx, cameraX, this.runway.worldX, RUNWAY_W);
         this._drawBirds(ctx, cameraX);
-        this._drawNpcs(ctx, cameraX);
+        this._drawNpcs(ctx, cameraX, npcExplodeProgress);
     }
 
     _drawBackground(ctx, cameraX) {
@@ -471,11 +471,37 @@ export class World {
         ctx.fillRect(rx + width - 8, ry, 8, 8);
     }
 
-    _drawNpcs(ctx, cameraX) {
+    _drawNpcs(ctx, cameraX, explodeProgress = 0) {
         ctx.imageSmoothingEnabled = false;
         for (const npc of this.npcs) {
             const sx = Math.round(npc.worldX - cameraX);
             if (sx < -NPC_W - 10 || sx > CANVAS_W + NPC_W) continue;
+
+            if (npc.exploding) {
+                ctx.save();
+                const exImg = img('explosion');
+                if (exImg) {
+                    const frameH    = exImg.height;
+                    const numFrames = Math.max(1, Math.floor(exImg.width / frameH));
+                    const frame     = Math.min(Math.floor(explodeProgress * numFrames), numFrames - 1);
+                    ctx.drawImage(exImg,
+                        frame * frameH, 0, frameH, frameH,
+                        sx - NPC_W / 2 - 8, npc.y - NPC_H / 2 - 6, NPC_W + 16, NPC_H + 12);
+                } else {
+                    ctx.globalAlpha = 1 - explodeProgress;
+                    const r    = 20 + explodeProgress * 30;
+                    const grad = ctx.createRadialGradient(sx, npc.y, 2, sx, npc.y, r);
+                    grad.addColorStop(0, '#fff700');
+                    grad.addColorStop(0.4, '#ff6600');
+                    grad.addColorStop(1, 'rgba(200,0,0,0)');
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(sx, npc.y, r, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+                continue;
+            }
 
             const npcImg = img(npc.imgKey);
             ctx.save();
