@@ -32,8 +32,12 @@ export const OBS_GATE_GAP    = 150;   // vertical gap in gate obstacle
 export const OBS_FIRST_X     = 900;   // world X of first obstacle (gives player time to take off)
 export const HITBOX_PAD      = 7;     // shrink collision box each side for fairness
 
+// Takeoff runway
+export const TAKEOFF_RUNWAY_START = -200; // world X of left edge (fills initial screen)
+export const TAKEOFF_RUNWAY_END   =  380; // world X of right edge; crash if still rolling past here
+
 // Runway / landing
-export const RUNWAY_W                = 280;
+export const RUNWAY_W                = 420;
 export const RUNWAY_TRIGGER_BATTERY  = 1;   // runway spawns when battery reaches this
 export const RUNWAY_AHEAD            = 1100; // world px ahead of camera when runway spawns
 export const LAND_VX_MAX             = 180;  // max horizontal speed for safe landing

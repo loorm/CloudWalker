@@ -1,6 +1,7 @@
 import {
     CANVAS_W, CANVAS_H, HUD_H, GROUND_Y, PLANE_SCREEN_X,
     OBS_COL_W, OBS_GAP_MIN, OBS_GAP_MAX, OBS_GATE_GAP, OBS_FIRST_X, HITBOX_PAD,
+    TAKEOFF_RUNWAY_START, TAKEOFF_RUNWAY_END,
     RUNWAY_W, RUNWAY_TRIGGER_BATTERY, RUNWAY_AHEAD,
     PARALLAX_BG,
     NPC_W, NPC_H, NPC_SPAWN_INTERVAL, NPC_SPAWN_JITTER,
@@ -292,7 +293,8 @@ export class World {
         if (this.levelCfg.storm) this._drawStormOverlay(ctx);
         this._drawGround(ctx);
         this._drawObstacles(ctx, cameraX);
-        if (this.runway) this._drawRunway(ctx, cameraX);
+        this._drawRunwayAt(ctx, cameraX, TAKEOFF_RUNWAY_START, TAKEOFF_RUNWAY_END - TAKEOFF_RUNWAY_START);
+        if (this.runway) this._drawRunwayAt(ctx, cameraX, this.runway.worldX, RUNWAY_W);
         this._drawBirds(ctx, cameraX);
         this._drawNpcs(ctx, cameraX);
     }
@@ -435,19 +437,19 @@ export class World {
         }
     }
 
-    _drawRunway(ctx, cameraX) {
-        const rx = Math.round(this.runway.worldX - cameraX);
+    _drawRunwayAt(ctx, cameraX, worldX, width) {
+        const rx = Math.round(worldX - cameraX);
         const ry = GROUND_Y - 3;
         ctx.fillStyle = '#666677';
-        ctx.fillRect(rx, ry, RUNWAY_W, 8);
+        ctx.fillRect(rx, ry, width, 8);
         ctx.fillStyle = '#ffffff';
         const dashW = 28, gap = 20;
-        for (let x = rx + 10; x < rx + RUNWAY_W - dashW; x += dashW + gap) {
+        for (let x = rx + 10; x < rx + width - dashW; x += dashW + gap) {
             ctx.fillRect(x, ry + 2, dashW, 3);
         }
         ctx.fillStyle = '#ffff88';
         ctx.fillRect(rx, ry, 8, 8);
-        ctx.fillRect(rx + RUNWAY_W - 8, ry, 8, 8);
+        ctx.fillRect(rx + width - 8, ry, 8, 8);
     }
 
     _drawNpcs(ctx, cameraX) {

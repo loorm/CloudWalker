@@ -13,6 +13,7 @@ import {
     CANVAS_W, CANVAS_H, HUD_H, GROUND_Y,
     PLANE_H, PLANE_SCREEN_X,
     BATTERY_MAX, BATTERY_DRAIN_SEC,
+    TAKEOFF_RUNWAY_END,
     LAND_VX_MAX, LAND_VY_MAX, LIFTOFF_VX,
     LEVEL_COUNT, POINTS_TO_LAND, POINTS_TO_LAND_CHALLENGE,
     TRICK_FLASH_DUR,
@@ -137,6 +138,10 @@ class Game {
                     this.plane.liftoff();
                     this.state = STATE.FLYING;
                     startEngine();
+                } else if (this.plane.worldX > TAKEOFF_RUNWAY_END) {
+                    playCrash();
+                    this.crashReason = '';
+                    this.state = STATE.CRASHED;
                 }
                 break;
             }
