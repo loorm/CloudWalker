@@ -113,6 +113,17 @@ export class HUD {
         ctx.fillRect(bx, by, 220 * t, 14);
     }
 
+    drawInvertedFlight(ctx) {
+        const pulse = 0.75 + 0.25 * Math.sin(Date.now() / 200);
+        ctx.save();
+        ctx.textAlign    = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillStyle    = `rgba(80, 220, 255, ${pulse})`;
+        ctx.font         = 'bold 14px monospace';
+        ctx.fillText('⬆ INVERTED FLIGHT — 2× POINTS — controls reversed ⬆', CANVAS_W / 2, CANVAS_H - 10);
+        ctx.restore();
+    }
+
     drawBatteryWarning(ctx, battery) {
         if (battery > 2) return;
         const pulse = 0.3 + 0.25 * Math.sin(Date.now() / 130);
@@ -332,9 +343,10 @@ export class HUD {
         ctx.textAlign = 'left';
     }
 
-    drawCrashed(ctx, score, crashReason = '') {
-        const isBird  = crashReason === 'bird';
-        const isFloor = crashReason === 'floor';
+    drawCrashed(ctx, score, crashReason = '', powerless = false) {
+        const isBird    = crashReason === 'bird';
+        const isFloor   = crashReason === 'floor' || crashReason === 'inverted_landing';
+        const isInvLand = crashReason === 'inverted_landing';
         ctx.fillStyle = isBird ? 'rgba(10, 40, 0, 0.78)' : isFloor ? 'rgba(80, 30, 0, 0.78)' : 'rgba(60, 0, 0, 0.78)';
         ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
@@ -345,13 +357,24 @@ export class HUD {
         ctx.font = 'bold 64px monospace';
         ctx.fillText(isBird ? 'BIRDSTRIKE!' : isFloor ? 'FLOOR MORT!' : 'CRASHED!', CANVAS_W / 2, CANVAS_H / 2 - 55);
 
+        // Sub-messages (stack if multiple apply)
+        const subMsgs = [];
+        if (powerless)  subMsgs.push('You ran out of battery! Try to land in time.');
+        if (isInvLand)  subMsgs.push('You tried to land while inverted.');
+
+        ctx.fillStyle = '#ffaa22';
+        ctx.font = '20px monospace';
+        const subStart = CANVAS_H / 2 - 10;
+        subMsgs.forEach((msg, i) => ctx.fillText(msg, CANVAS_W / 2, subStart + i * 28));
+
+        const scoreY = subStart + subMsgs.length * 28 + (subMsgs.length ? 12 : 5);
         ctx.fillStyle = '#ffffff';
         ctx.font = '24px monospace';
-        ctx.fillText(`Score: ${score}`, CANVAS_W / 2, CANVAS_H / 2 + 15);
+        ctx.fillText(`Score: ${score}`, CANVAS_W / 2, scoreY);
 
         ctx.fillStyle = '#888888';
         ctx.font = '17px monospace';
-        ctx.fillText('Press SPACE to try again', CANVAS_W / 2, CANVAS_H / 2 + 68);
+        ctx.fillText('Press SPACE to try again', CANVAS_W / 2, scoreY + 50);
 
         ctx.textAlign = 'left';
     }

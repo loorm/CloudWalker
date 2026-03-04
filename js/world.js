@@ -112,11 +112,11 @@ export class World {
 
     // ── Per-frame update ──────────────────────────────────────────────────────
 
-    update(planeWorldX, battery) {
+    update(planeWorldX, battery, inverted = false) {
         const cameraX = planeWorldX - PLANE_SCREEN_X;
         const cfg     = this.levelCfg;
 
-        this._updateObstacles(planeWorldX, cameraX, cfg);
+        this._updateObstacles(planeWorldX, cameraX, cfg, inverted);
         this._updateRunway(cameraX, battery);
         if (cfg.trafficCount > 0) this._updateNpcs(cameraX, cfg);
         if (cfg.birdCount    > 0) this._updateBirds(cameraX, cfg);
@@ -124,7 +124,7 @@ export class World {
 
     // ── Obstacle management ───────────────────────────────────────────────────
 
-    _updateObstacles(planeWorldX, cameraX, cfg) {
+    _updateObstacles(planeWorldX, cameraX, cfg, inverted = false) {
         const gMin = OBS_GAP_MIN * cfg.obsGapFactor;
         const gMax = OBS_GAP_MAX * cfg.obsGapFactor;
 
@@ -136,7 +136,7 @@ export class World {
         for (const obs of this.obstacles) {
             if (!obs.scored && obs.worldX + OBS_COL_W < planeWorldX) {
                 obs.scored = true;
-                this.score += (cfg.pointMultiplier ?? 1);
+                this.score += (cfg.pointMultiplier ?? 1) * (inverted ? 2 : 1);
             }
         }
         this.obstacles = this.obstacles.filter(o => o.worldX - cameraX > -400);

@@ -17,6 +17,7 @@ import {
     LAND_VX_MAX, LAND_VY_MAX, LIFTOFF_VX,
     LEVEL_COUNT, POINTS_TO_LAND, POINTS_TO_LAND_CHALLENGE,
     TRICK_FLASH_DUR, EXPLOSION_DURATION,
+    INVERT_WINDOW, INVERT_MIN_VX,
 } from './constants.js';
 
 const STATE = { TITLE: 0, TAKEOFF: 1, FLYING: 2, CRASHED: 3, LANDED: 4, PAUSED: 5, INSTRUCTIONS: 6, DEV_SELECT: 7 };
@@ -56,6 +57,8 @@ class Game {
         this.prevPause     = false;
         this.prevHelp      = false;
         this.explodeDone   = false;
+        this.powerless     = false; // battery dead — inputs locked, plane glides
+        this.invertBuf     = [];    // { key, time } buffer for invert entry/exit sequences
 
         // Dev cheat: A×4 on title → level select
         this.devKeyCount = 0;
@@ -72,6 +75,7 @@ class Game {
 
         // Dev cheat keydown listener (separate from held-key input system)
         window.addEventListener('keydown', e => this._devKeydown(e));
+        window.addEventListener('keydown', e => this._invertKeydown(e));
 
         // Trick callback: award points (with level multiplier) + trigger fanfare
         initTricks((name, pts) => {
@@ -247,6 +251,34 @@ class Game {
         }
     }
 
+    _invertKeydown(e) {
+        if (this.state !== STATE.FLYING || this.powerless || e.repeat) return;
+        const isUp    = e.code === 'ArrowUp'    || e.code === 'KeyW';
+        const isDn    = e.code === 'ArrowDown'  || e.code === 'KeyS';
+        const isRight = e.code === 'ArrowRight' || e.code === 'KeyD';
+        if (!isUp && !isDn && !isRight) return;
+
+        const key = isUp ? 'up' : isDn ? 'down' : 'right';
+        const now = performance.now() / 1000;
+        this.invertBuf.push({ key, time: now });
+        this.invertBuf = this.invertBuf.filter(b => now - b.time <= INVERT_WINDOW);
+
+        const keys    = this.invertBuf.map(b => b.key);
+        const matches = seq => keys.length >= seq.length &&
+            seq.every((k, i) => k === keys[keys.length - seq.length + i]);
+
+        const ENTRY = ['up','right','up','right','up','right'];
+        const EXIT  = ['down','right','down','right','down','right'];
+
+        if (!this.plane.inverted && matches(ENTRY) && this.plane.vx >= INVERT_MIN_VX) {
+            this.plane.startInvertedFlight();
+            this.invertBuf = [];
+        } else if (this.plane.inverted && matches(EXIT)) {
+            this.plane.endInvertedFlight();
+            this.invertBuf = [];
+        }
+    }
+
     _startLevel() {
         const cfg = this.levelData;
         this.plane.reset();
@@ -255,7 +287,9 @@ class Game {
         this.batteryTimer = 0;
         this.elapsed      = 0;
         this.explodeDone  = false;
+        this.powerless    = false;
         this.trickFlash   = null;
+        this.invertBuf    = [];
         stopEngine();
         startMusic();
         this.state = STATE.TAKEOFF;
@@ -268,10 +302,14 @@ class Game {
         if (this.batteryTimer >= BATTERY_DRAIN_SEC) {
             this.batteryTimer -= BATTERY_DRAIN_SEC;
             this.battery = Math.max(0, this.battery - 1);
-            if (this.battery <= 2) playBatteryBeep();
+            if (this.battery <= 2 && !this.powerless) playBatteryBeep();
         }
 
-        this.plane.updateFlying(dt, { UP, DOWN, LEFT, RIGHT });
+        const noBtn = () => false;
+        const flyInput = this.powerless
+            ? { UP: noBtn, DOWN: noBtn, LEFT: noBtn, RIGHT: noBtn }
+            : { UP, DOWN, LEFT, RIGHT };
+        this.plane.updateFlying(dt, flyInput);
 
         // Turbulence (level 4+)
         const turb = this.levelData.turbulence;
@@ -279,13 +317,17 @@ class Game {
             this.plane.vy += (Math.random() - 0.5) * 2 * turb * dt;
         }
 
-        // Trick detection
-        this.plane.setHighAlpha(isHighAlphaActive());
-        updateTricks(dt, true, this.plane.y, UP, RIGHT);
+        // Trick detection (disabled when powerless)
+        if (!this.powerless) {
+            this.plane.setHighAlpha(isHighAlphaActive());
+            updateTricks(dt, true, this.plane.y, UP, RIGHT);
+        } else {
+            this.plane.setHighAlpha(false);
+        }
 
         // Tick world entities with actual dt
         this.world.tick(dt);
-        this.world.update(this.plane.worldX, this.battery);
+        this.world.update(this.plane.worldX, this.battery, this.plane.inverted);
 
         setEnginePitch(this.plane.vx);
 
@@ -310,12 +352,13 @@ class Game {
             const safeSpeed = this.plane.vx <= LAND_VX_MAX;
 
             stopEngine();
-            if (onRunway && safeSpeed) {
+            if (onRunway && safeSpeed && !this.plane.inverted) {
                 this.state = STATE.LANDED;
             } else {
                 playCrash();
                 fadeOutMusic(7);
-                this.crashReason = 'floor';
+                this.crashReason = (onRunway && safeSpeed && this.plane.inverted)
+                    ? 'inverted_landing' : 'floor';
                 this.state = STATE.CRASHED;
             }
             return;
@@ -343,13 +386,10 @@ class Game {
             return;
         }
 
-        // Battery dead
-        if (this.battery <= 0) {
+        // Battery dead — lock controls and let the plane glide to its fate
+        if (this.battery <= 0 && !this.powerless) {
+            this.powerless = true;
             stopEngine();
-            playCrash();
-            fadeOutMusic(7);
-            this.crashReason = '';
-            this.state = STATE.CRASHED;
         }
     }
 
@@ -380,7 +420,7 @@ class Game {
 
         if (this.state === STATE.CRASHED) {
             this.plane.drawExplosion(ctx);
-            if (this.explodeDone) this.hud.drawCrashed(ctx, this.world.score, this.crashReason);
+            if (this.explodeDone) this.hud.drawCrashed(ctx, this.world.score, this.crashReason, this.powerless);
         } else {
             this.plane.draw(ctx);
 
@@ -409,6 +449,7 @@ class Game {
         // Flying-only overlays
         if (this.state === STATE.FLYING) {
             this.hud.drawBatteryWarning(ctx, this.battery);
+            if (this.plane.inverted) this.hud.drawInvertedFlight(ctx);
 
             if (this.trickFlash) {
                 const t = 1 - this.trickFlash.timer / TRICK_FLASH_DUR;

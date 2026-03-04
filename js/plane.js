@@ -4,6 +4,7 @@ import {
     VX_MIN, VX_MAX, VX_ACCEL, VX_GROUND_ACCEL,
     VY_LIFT_ACCEL, VY_DESCEND_EXTRA, VY_MAX,
     LIFTOFF_VX, EXPLOSION_FRAME_H, EXPLOSION_DURATION,
+    INVERT_ENTRY_SPIN,
     DEATH_KNOT_SPIN, DEATH_KNOT_ARC_H,
     CORKSCREW_SPIN, CORKSCREW_ARC_H,
     SNAP_ROLL_SPIN, SNAP_ROLL_ARC_H,
@@ -29,6 +30,22 @@ export class Plane {
         this._highAlphaActive   = false;
         this.highAlphaTilt      = 0;
         this.highAlphaTime      = 0;
+        this.inverted           = false;
+        this.invertSpinTimer    = 0;
+        this.invertSpinEntering = true; // true = entering (1→-1), false = exiting (-1→1)
+    }
+
+    startInvertedFlight() {
+        this.inverted           = true;
+        this.invertSpinTimer    = INVERT_ENTRY_SPIN;
+        this.invertSpinEntering = true;
+    }
+
+    endInvertedFlight() {
+        // Keep inverted=true so controls stay swapped during the exit animation;
+        // the timer tick in updateFlying will clear it once the spin completes.
+        this.invertSpinTimer    = INVERT_ENTRY_SPIN;
+        this.invertSpinEntering = false;
     }
 
     startDeathKnot() {
@@ -81,10 +98,12 @@ export class Plane {
             this.vx = Math.max(this.vx - VX_ACCEL * dt, VX_MIN);
         }
 
-        // Vertical: hands-off = gentle glide; UP climbs against full gravity; DOWN dives
-        if (input.DOWN()) {
+        // Vertical: UP/DOWN are swapped while inverted
+        const doUp   = this.inverted ? input.DOWN() : input.UP();
+        const doDown = this.inverted ? input.UP()   : input.DOWN();
+        if (doDown) {
             this.vy += (GRAVITY + VY_DESCEND_EXTRA) * dt;
-        } else if (input.UP()) {
+        } else if (doUp) {
             this.vy += (GRAVITY - VY_LIFT_ACCEL) * dt;
         } else {
             this.vy += GLIDE_GRAVITY * dt;
@@ -95,6 +114,10 @@ export class Plane {
         this.y      += this.vy * dt;
         this.worldX += this.vx * dt;
 
+        if (this.invertSpinTimer > 0) {
+            this.invertSpinTimer = Math.max(0, this.invertSpinTimer - dt);
+            if (this.invertSpinTimer === 0 && !this.invertSpinEntering) this.inverted = false;
+        }
         if (this.deathKnotTimer  > 0) this.deathKnotTimer  = Math.max(0, this.deathKnotTimer  - dt);
         if (this.corkscrewTimer  > 0) this.corkscrewTimer  = Math.max(0, this.corkscrewTimer  - dt);
         if (this.snapRollTimer   > 0) this.snapRollTimer   = Math.max(0, this.snapRollTimer   - dt);
@@ -124,25 +147,33 @@ export class Plane {
             let yOff   = 0;
             let scaleY = 1;
 
-            if (this.deathKnotTimer > 0) {
+            if (this.invertSpinTimer > 0) {
+                // Entry: scaleY 1 → -1  |  Exit: scaleY -1 → 1
+                const p = 1 - this.invertSpinTimer / INVERT_ENTRY_SPIN;
+                scaleY = this.invertSpinEntering ? Math.cos(p * Math.PI) : -Math.cos(p * Math.PI);
+            } else if (this.deathKnotTimer > 0) {
                 // Inside loop: CCW spin (nose up first) + half-sine vertical arc
                 const p = 1 - this.deathKnotTimer / DEATH_KNOT_SPIN;
-                angle = -p * Math.PI * 2;
-                yOff  = -DEATH_KNOT_ARC_H * Math.sin(p * Math.PI);
+                angle  = -p * Math.PI * 2;
+                yOff   = -DEATH_KNOT_ARC_H * Math.sin(p * Math.PI);
+                scaleY = this.inverted ? -1 : 1;
             } else if (this.corkscrewTimer > 0) {
                 // Corkscrew: two roll cycles, arcs UP
                 const p = 1 - this.corkscrewTimer / CORKSCREW_SPIN;
-                scaleY = Math.cos(p * Math.PI * 4);
+                scaleY = Math.cos(p * Math.PI * 4) * (this.inverted ? -1 : 1);
                 yOff   = -CORKSCREW_ARC_H * Math.sin(p * Math.PI);
             } else if (this.snapRollTimer > 0) {
                 // Snap Roll: one roll cycle (slower), arcs DOWN
                 const p = 1 - this.snapRollTimer / SNAP_ROLL_SPIN;
-                scaleY = Math.cos(p * Math.PI * 2);
+                scaleY = Math.cos(p * Math.PI * 2) * (this.inverted ? -1 : 1);
                 yOff   = +SNAP_ROLL_ARC_H * Math.sin(p * Math.PI);
             } else if (this.highAlphaTilt > 0.01) {
                 // High Alpha: tilt to ~77° CCW (nose up) with gentle wobble while held
                 const wobble = HIGH_ALPHA_WOBBLE_AMP * Math.sin(this.highAlphaTime * HIGH_ALPHA_WOBBLE_RATE);
-                angle = -(HIGH_ALPHA_TILT_ANGLE + wobble) * this.highAlphaTilt;
+                angle  = -(HIGH_ALPHA_TILT_ANGLE + wobble) * this.highAlphaTilt;
+                scaleY = this.inverted ? -1 : 1;
+            } else {
+                scaleY = this.inverted ? -1 : 1;
             }
 
             ctx.translate(PLANE_SCREEN_X, this.y + yOff);
