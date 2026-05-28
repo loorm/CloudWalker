@@ -14,13 +14,21 @@ export function initDpad(canvas) {
         const code = BTN_MAP[btn.id];
         if (!code) continue;
 
-        btn.addEventListener('touchstart',  e => { e.preventDefault(); pressVirtual(code); },   { passive: false });
-        btn.addEventListener('touchend',    e => { e.preventDefault(); releaseVirtual(code); }, { passive: false });
-        btn.addEventListener('touchcancel', e => { e.preventDefault(); releaseVirtual(code); }, { passive: false });
+        const press = () => {
+            pressVirtual(code);
+            // Fire a synthetic keydown so sequence-based tricks and inverted-flight
+            // detection (which listen to window 'keydown') work on touch too.
+            window.dispatchEvent(new KeyboardEvent('keydown', { code, bubbles: true }));
+        };
+        const release = () => releaseVirtual(code);
 
-        btn.addEventListener('mousedown',  () => pressVirtual(code));
-        btn.addEventListener('mouseup',    () => releaseVirtual(code));
-        btn.addEventListener('mouseleave', () => releaseVirtual(code));
+        btn.addEventListener('touchstart',  e => { e.preventDefault(); press(); },   { passive: false });
+        btn.addEventListener('touchend',    e => { e.preventDefault(); release(); }, { passive: false });
+        btn.addEventListener('touchcancel', e => { e.preventDefault(); release(); }, { passive: false });
+
+        btn.addEventListener('mousedown',  press);
+        btn.addEventListener('mouseup',    release);
+        btn.addEventListener('mouseleave', release);
     }
 
     // Tap anywhere on the canvas (not on a dpad button) → Space, for title/crashed/landed screens
