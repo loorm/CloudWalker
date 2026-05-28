@@ -1,5 +1,5 @@
 import { CANVAS_W, CANVAS_H, HUD_H, BATTERY_MAX, GROUND_Y, VX_MIN, VX_MAX } from './constants.js';
-import { img } from './assets.js';
+import { img, PLANE_ROSTER } from './assets.js';
 
 const CELL_COLOURS = ['#ff2020', '#ff6600', '#ffaa00', '#ccee00', '#88ee00', '#44ee00'];
 const CELL_W   = 22;
@@ -169,7 +169,7 @@ export class HUD {
     /**
      * @param {number} bestScore  all-time best run score (0 = never completed)
      */
-    drawTitle(ctx, bestScore = 0) {
+    drawTitle(ctx, bestScore = 0, selectedPlane = 0) {
         const bgImg = img('opening');
         if (bgImg) {
             ctx.imageSmoothingEnabled = true;
@@ -215,15 +215,52 @@ export class HUD {
         ctx.font = '18px monospace';
         ctx.fillText('Press  SPACE  to fly', CANVAS_W / 2, CANVAS_H / 2 + 55);
 
-        ctx.fillStyle = '#aaaaaa';
-        ctx.font = '13px monospace';
-        ctx.fillText('← slow · → fast · ↑ climb · ↓ descend · tricks: double-tap / combos', CANVAS_W / 2, CANVAS_H / 2 + 100);
-
         ctx.fillStyle = 'rgba(0,0,0,0.6)';
         ctx.font = '14px monospace';
         ctx.fillText('Press  I  for instructions', CANVAS_W / 2 + 1, CANVAS_H / 2 + 127);
         ctx.fillStyle = '#aaccee';
         ctx.fillText('Press  I  for instructions', CANVAS_W / 2, CANVAS_H / 2 + 126);
+
+        // ── Plane selector ────────────────────────────────────────────────────
+        const selY = CANVAS_H / 2 + 158; // top of selector block
+
+        // Dark panel background
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+        ctx.fillRect(CANVAS_W / 2 - 260, selY - 8, 520, 104);
+        ctx.strokeStyle = 'rgba(240, 192, 48, 0.4)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(CANVAS_W / 2 - 260, selY - 8, 520, 104);
+
+        // "SELECT AIRCRAFT" label
+        ctx.fillStyle = '#e8c840';
+        ctx.font = 'bold 12px monospace';
+        ctx.fillText('SELECT AIRCRAFT  ( ← → )', CANVAS_W / 2, selY + 6);
+
+        // Sprite preview (96 × 44, centred)
+        const SW = 96, SH = 44;
+        const planePreview = img(`plane_${selectedPlane}`);
+        ctx.save();
+        ctx.imageSmoothingEnabled = false;
+        if (planePreview) {
+            ctx.drawImage(planePreview, 0, 0, planePreview.width, planePreview.height,
+                CANVAS_W / 2 - SW / 2, selY + 20, SW, SH);
+        } else {
+            ctx.fillStyle = '#3a7bd5';
+            ctx.fillRect(CANVAS_W / 2 - SW / 2, selY + 20, SW, SH);
+        }
+        ctx.restore();
+
+        // Pulsing ◄ / ► arrows on either side of sprite
+        const arrAlpha = 0.5 + 0.5 * Math.sin(Date.now() / 350);
+        ctx.fillStyle = `rgba(240, 192, 48, ${arrAlpha})`;
+        ctx.font = 'bold 22px monospace';
+        ctx.fillText('◄', CANVAS_W / 2 - SW / 2 - 30, selY + 44);
+        ctx.fillText('►', CANVAS_W / 2 + SW / 2 + 16, selY + 44);
+
+        // Plane name below sprite
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 14px monospace';
+        ctx.fillText(PLANE_ROSTER[selectedPlane].name, CANVAS_W / 2, selY + 82);
 
         ctx.textAlign = 'left';
     }

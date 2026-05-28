@@ -18,3 +18,6 @@ export const KEY_HELP  = () => held.has('KeyI');
 
 /** Returns true if any key in the set is currently held. */
 export const anyKey = () => held.size > 0;
+
+export function pressVirtual(code)   { held.add(code); }
+export function releaseVirtual(code) { held.delete(code); }

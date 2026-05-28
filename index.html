@@ -19,6 +19,13 @@
       user-select: none;
     }
 
+    #game-wrap {
+      position: relative;
+      display: inline-block;
+      line-height: 0;
+      touch-action: none;
+    }
+
     canvas {
       display: block;
       /* Fill window while preserving 16:9 aspect ratio — no JS needed */
@@ -29,6 +36,54 @@
       border: 2px solid #222;
     }
 
+    #dpad {
+      position: absolute;
+      bottom: 3%;
+      right: 2%;
+      display: grid;
+      grid-template-areas:
+        ".    up   ."
+        "left .    right"
+        ".    down .";
+      grid-template-columns: repeat(3, var(--btn));
+      grid-template-rows:    repeat(3, var(--btn));
+      gap: 5px;
+      --btn: clamp(44px, 7vmin, 70px);
+      pointer-events: none;
+    }
+
+    .dpad-btn {
+      pointer-events: auto;
+      width: var(--btn);
+      height: var(--btn);
+      background: rgba(255, 255, 255, 0.18);
+      border: 2px solid rgba(255, 255, 255, 0.50);
+      border-radius: 10px;
+      color: rgba(255, 255, 255, 0.80);
+      font-size: calc(var(--btn) * 0.38);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: none;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.30);
+    }
+
+    .dpad-btn:active {
+      background: rgba(255, 255, 255, 0.38);
+      border-color: rgba(255, 255, 255, 0.80);
+    }
+
+    #dpad-up    { grid-area: up; }
+    #dpad-left  { grid-area: left; }
+    #dpad-right { grid-area: right; }
+    #dpad-down  { grid-area: down; }
+
     #hint {
       margin-top: 10px;
       font-size: 11px;
@@ -38,7 +93,15 @@
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas"></canvas>
+  <div id="game-wrap">
+    <canvas id="gameCanvas"></canvas>
+    <div id="dpad">
+      <button class="dpad-btn" id="dpad-up">▲</button>
+      <button class="dpad-btn" id="dpad-left">◀</button>
+      <button class="dpad-btn" id="dpad-right">▶</button>
+      <button class="dpad-btn" id="dpad-down">▼</button>
+    </div>
+  </div>
   <div id="hint">
     Run with: <code>npx serve .</code> &nbsp;|&nbsp;
     Or Chrome: <code>--allow-file-access-from-files</code>

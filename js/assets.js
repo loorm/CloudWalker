@@ -5,6 +5,19 @@
 
 const images = {};
 
+export const PLANE_ROSTER = [
+    { file: 'mustang.png',       name: 'North-American P-51 Mustang' },
+    { file: 'focke-wulf.png',    name: 'Focke-Wulf Fw 190'           },
+    { file: 'spitfire.png',      name: 'Supermarine Spitfire'        },
+    { file: 'messerschmitt.png', name: 'Messerschmitt Bf 109'        },
+    { file: 'zero.png',          name: 'Mitsubishi A6M2 Zero'        },
+];
+
+/** Reassign the active player plane to the given roster index. */
+export function setActivePlane(idx) {
+    images['plane'] = images[`plane_${idx}`] ?? images['plane_0'];
+}
+
 function loadImage(key, src) {
     return new Promise(resolve => {
         const img = new Image();
@@ -19,8 +32,8 @@ export async function loadImages() {
     const env   = `${base}/Environments`;
     const pl    = `${base}/Planes_Obstacles/Planes`;
     await Promise.all([
-        // Player plane
-        loadImage('plane',       `${pl}/mustang.png`),
+        // Player plane options (plane_0 … plane_4 map to PLANE_ROSTER)
+        ...PLANE_ROSTER.map((p, i) => loadImage(`plane_${i}`, `${pl}/${p.file}`)),
         loadImage('explosion',   `${pl}/Explosion_16x16.png`),
         // NPC planes
         loadImage('npc_green',   `${pl}/cessna.png`),
@@ -41,6 +54,7 @@ export async function loadImages() {
         // Title screen
         loadImage('opening', `${base}/Titles/opening.jpg`),
     ]);
+    setActivePlane(0); // default to P-51 Mustang
 }
 
 /** Get a loaded image by key, or null if it failed to load. */

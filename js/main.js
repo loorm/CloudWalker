@@ -1,5 +1,6 @@
 import { initInput, UP, DOWN, LEFT, RIGHT, SPACE, anyKey, PAUSE_KEY, KEY_HELP } from './input.js';
-import { loadImages } from './assets.js';
+import { initDpad } from './dpad.js';
+import { loadImages, setActivePlane, PLANE_ROSTER } from './assets.js';
 import {
     prefetchAudio, initAudio, startMusic, startEngine, stopEngine, setEnginePitch, playCrash,
     playTrickFanfare, playBatteryBeep, suspendAudio, resumeAudio, fadeOutMusic,
@@ -56,6 +57,9 @@ class Game {
         this.prevSpace     = false;
         this.prevPause     = false;
         this.prevHelp      = false;
+        this.prevLeft      = false;
+        this.prevRight     = false;
+        this.selectedPlane = 0;
         this.explodeDone   = false;
         this.powerless     = false; // battery dead — inputs locked, plane glides
         this.invertBuf     = [];    // { key, time } buffer for invert entry/exit sequences
@@ -71,6 +75,7 @@ class Game {
 
     async start() {
         initInput();
+        initDpad(this.canvas);
         prefetchAudio();
 
         // Dev cheat keydown listener (separate from held-key input system)
@@ -124,11 +129,24 @@ class Game {
         const helpHit = helpNow && !this.prevHelp;
         this.prevHelp = helpNow;
 
+        const leftNow = LEFT();
+        const leftHit = leftNow && !this.prevLeft;
+        this.prevLeft = leftNow;
+
+        const rightNow = RIGHT();
+        const rightHit = rightNow && !this.prevRight;
+        this.prevRight = rightNow;
+
         switch (this.state) {
             case STATE.TITLE:
                 if (helpHit) {
                     this.state = STATE.INSTRUCTIONS;
                     break;
+                }
+                if (leftHit || rightHit) {
+                    const dir = rightHit ? 1 : -1;
+                    this.selectedPlane = (this.selectedPlane + dir + PLANE_ROSTER.length) % PLANE_ROSTER.length;
+                    setActivePlane(this.selectedPlane);
                 }
                 if (spaceHit) {
                     this.levelIdx  = 0;
@@ -280,6 +298,7 @@ class Game {
     }
 
     _startLevel() {
+        setActivePlane(this.selectedPlane);
         const cfg = this.levelData;
         this.plane.reset();
         this.world.reset(cfg, this.carryOver);
@@ -400,12 +419,12 @@ class Game {
         ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
 
         if (this.state === STATE.TITLE) {
-            this.hud.drawTitle(ctx, this.bestScore);
+            this.hud.drawTitle(ctx, this.bestScore, this.selectedPlane);
             return;
         }
 
         if (this.state === STATE.DEV_SELECT) {
-            this.hud.drawTitle(ctx, this.bestScore);
+            this.hud.drawTitle(ctx, this.bestScore, this.selectedPlane);
             this.hud.drawDevSelect(ctx);
             return;
         }
